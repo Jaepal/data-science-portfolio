@@ -43,7 +43,7 @@ for team in url_teams:
 ## 각 선수 스탯 수집
 
 # 스탯을 담을 DataFrame 생성
-stats = pd.DataFrame(columns=['Player', 'Season', 'Champion', 'Game', 'Win', 'Lose', 'WinRate', 'Kill', 'Death', 'Assist',
+stats = pd.DataFrame(columns=['Team', 'Player', 'Season', 'Champion', 'Game', 'Win', 'Lose', 'WinRate', 'Kill', 'Death', 'Assist',
                               'KDA', 'VS', 'DMG', 'DPM', 'DTPM', 'CS', 'CSPM', 'KPAR', 'DPAR', 'KS', 'Gold', 'GPM', 'Base'])
 
 
@@ -69,7 +69,7 @@ def summer_check_exists_by_xpath():
         return False
     return True
 
-for player in url_players:
+for n, player in enumerate(url_players):
     print(player.split('/')[2], '정보')
     url = url_base + str(player)
     driver.get(url)
@@ -108,7 +108,7 @@ for player in url_players:
         
         # 스프링 데이터를 DataFrame에 추가
         for idx in range(len(table)//21):
-            stat = [player.split('/')[2], '2019 LCK Spring']
+            stat = [team_name[n], player.split('/')[2], '2019 LCK Spring']
             stat.extend(table[idx*21:(idx+1)*21])
             stats.loc[len(stats),:] = stat
         print(player.split('/')[2], '스프링 데이터 추가 완료')
@@ -130,11 +130,14 @@ for player in url_players:
         # 스탯 list에 서머 데이터 추가
         table = list(map(lambda a: a.text, soup.select('table.StatsTable > tbody > tr > td')))
         
-        # 스프링 데이터를 DataFrame에 추가
+        # 서머 데이터를 DataFrame에 추가
         for idx in range(len(table)//21):
-            stat = [player.split('/')[2], '2019 LCK Summer']
+            stat = [team_name[n], player.split('/')[2], '2019 LCK Summer']
             stat.extend(table[idx*21:(idx+1)*21])
             stats.loc[len(stats),:] = stat
         print(player.split('/')[2], '서머 데이터 추가 완료')
     else:
         print('서머 출전하지 않음')
+
+# 데이터 저장
+stats.to_csv('path_to_file', index=False)
