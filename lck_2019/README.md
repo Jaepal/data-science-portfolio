@@ -9,4 +9,6 @@
 
 #### (2) Tableau public
 
+![](C:\Users\Lee\Desktop\github\data-science-portfolio\lck_2019\image\2019_LCK.png)
+
 - [Link](https://public.tableau.com/profile/jaeyoung.lee#!/vizhome/2019LoLChampionsKoreaPlayerStatistics/2019_LCK)
