@@ -11,4 +11,4 @@
   - [2019 LoL Champions Korea 플레이어 통계](https://github.com/Jaepal/data-science-portfolio/tree/master/lck_2019)
   - [2019 여름 경기도 미세먼지 시각화](https://github.com/Jaepal/data-science-portfolio/tree/master/gyeonggi_air_pollution)
 - Micro Projects
-  - [리그 오브 레전드 솔로랭크에서 야스오에게 에어본 조합을 맞춰주면 이길 확률이 높을까?](
+  - [리그 오브 레전드 솔로랭크에서 야스오에게 에어본 조합을 맞춰주면 이길 확률이 높을까?](https://github.com/Jaepal/data-science-portfolio/tree/master/league_of_legends_yasuo)
