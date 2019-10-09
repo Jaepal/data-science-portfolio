@@ -227,7 +227,7 @@ def richCheck(game, bpl):
 def calPlatinumPayline(game, bpl):
     pay = 0
     r_acc = 0
-    # pay_type_list = []
+    pay_type_list = []
     
     # RICH 보너스 계산
     pay += richCheck(game, bpl)
@@ -259,7 +259,7 @@ def calPlatinumPayline(game, bpl):
         else:
             sym = getSym(tmp)
             pay += payTable.loc[len(tmp)-3, sym] * bpl
-        # pay_type_list.append(tmp)
+        pay_type_list.append(tmp)
     return pay
 
 def playPlatinum(n, bpl):
