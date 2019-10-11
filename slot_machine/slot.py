@@ -32,6 +32,8 @@ paylines = [[1, 4, 7, 10, 13],
             [2, 4, 6, 9, 12],
             [1, 3, 7, 9, 13]]
 
+labels = ['Q', '10', 'K', 'A', 'J', 'Ca', 'Cr', 'D', 'Co', 'W', 'R']
+
 payTable = pd.read_csv('../data/slot_machine/platinum_csv/payTable.csv')
 pl_all = pd.read_csv('../data/slot_machine/platinum_csv/pl_all.csv')
 test_game = []
@@ -44,156 +46,135 @@ for n, x in enumerate(pl_all['classname']):
 
 game = ['Co', 'K', 'D', 'K', 'K', 'K', 'K', 'A', 'Co', 'Q', 'A', 'R', 'Ca', 'Ca', 'Ca']
 game = ['W', '10', 'J', 'K', 'D', 'Ca', 'Q', 'W', 'Q', 'Co', '10', 'Q', 'Cr', 'Co', 'R']
-'''
-def getPlatinumColType():
-    i = np.random.randint(1, 201)
-    if i <= 109:
-        return 3
-    elif i <= 186 and i > 109:
-        return 2
-    elif i > 186:
-        return 1
-'''
 
 def getPlatinumColType(i):
     if i==0:
-        np.random.randint(1, 201)
-        if i <= 109:
+        j = np.random.randint(1, 201)
+        if j <= 109:
             return '3'
-        elif i <= 151 and i > 109:
+        elif j <= 151 and j > 109:
             return '2-1'
-        elif i <= 169 and i > 151:
+        elif j <= 169 and j > 151:
             return '2-2'
-        elif i <= 186 and i > 169:
+        elif j <= 186 and j > 169:
             return '2-3'
-        elif i > 186:
+        elif j > 186:
             return '1'
     if i==1:
-        np.random.randint(1, 201)
-        if i <= 88:
+        j = np.random.randint(1, 201)
+        if j <= 88:
             return '3'
-        elif i <= 127 and i > 109:
+        elif j <= 127 and j > 88:
             return '2-1'
-        elif i <= 138 and i > 127:
+        elif j <= 138 and j > 127:
             return '2-2'
-        elif i <= 183 and i > 138:
+        elif j <= 183 and j > 138:
             return '2-3'
-        elif i > 183:
+        elif j > 183:
             return '1'
     if i==2:
-        np.random.randint(1, 201)
-        if i <= 93:
+        j = np.random.randint(1, 201)
+        if j <= 93:
             return '3'
-        elif i <= 125 and i > 93:
+        elif j <= 125 and j > 93:
             return '2-1'
-        elif i <= 137 and i > 125:
+        elif j <= 137 and j > 125:
             return '2-2'
-        elif i <= 176 and i > 137:
+        elif j <= 176 and j > 137:
             return '2-3'
-        elif i > 176:
+        elif j > 176:
             return '1'
     if i==3:
-        np.random.randint(1, 201)
-        if i <= 110:
+        j = np.random.randint(1, 201)
+        if j <= 110:
             return '3'
-        elif i <= 130 and i > 110:
+        elif j <= 130 and j > 110:
             return '2-1'
-        elif i <= 149 and i > 130:
+        elif j <= 149 and j > 130:
             return '2-2'
-        elif i <= 192 and i > 149:
+        elif j <= 192 and j > 149:
             return '2-3'
-        elif i > 192:
+        elif j > 192:
             return '1'
     if i==4:
-        np.random.randint(1, 201)
-        if i <= 78:
+        j = np.random.randint(1, 201)
+        if j <= 78:
             return '3'
-        elif i <= 147 and i > 78:
+        elif j <= 127 and j > 78:
             return '2-1'
-        elif i <= 134 and i > 147:
+        elif j <= 134 and j > 127:
             return '2-2'
-        elif i <= 151 and i > 134:
+        elif j <= 151 and j > 134:
             return '2-3'
-        elif i > 151:
+        elif j > 151:
             return '1'
 
-def getPlatinumSymbol(start, end):
-    i = np.random.randint(start, end)
-    if i <= 27:
+def getPlatinumSymbol(probs, r_full=0):
+    if r_full:
+        i = np.random.randint(1, sum(probs[:10])+1)
+    else:
+        i = np.random.randint(1, sum(probs)+1)
+    if i <= sum(probs[:1]):
         return 'Q'
-    elif i <= 52 and i > 27:
+    elif i <= sum(probs[:2]) and i > sum(probs[:1]):
         return '10'
-    elif i <= 76 and i > 52:
+    elif i <= sum(probs[:3]) and i > sum(probs[:2]):
         return 'K'
-    elif i <= 99 and i > 76:
+    elif i <= sum(probs[:4]) and i > sum(probs[:3]):
         return 'A'
-    elif i <= 118 and i > 99:
+    elif i <= sum(probs[:5]) and i > sum(probs[:4]):
         return 'J'
-    elif i <= 137 and i > 118:
+    elif i <= sum(probs[:6]) and i > sum(probs[:5]):
         return 'Ca'
-    elif i <= 155 and i > 137:
+    elif i <= sum(probs[:7]) and i > sum(probs[:6]):
         return 'Cr'
-    elif i <= 171 and i > 155:
+    elif i <= sum(probs[:8]) and i > sum(probs[:7]):
         return 'D'
-    elif i <= 186 and i > 171:
+    elif i <= sum(probs[:9]) and i > sum(probs[:8]):
         return 'Co'
-    elif i <= 192 and i > 186:
+    elif i <= sum(probs[:10]) and i > sum(probs[:9]):
         return 'W'
-    elif i > 192:
+    elif i > sum(probs[:10]):
         return 'R'
+
+def getWeightedProbability(game):
+    weight = [27, 25, 24, 23, 19, 19, 18, 16, 15, 8, 6]
+    switch = [0] * 11
+    unique_list = list(set(game))
+    for n, s in enumerate(labels):
+        if s in unique_list:
+            switch[n] = 2
+        if s != 'R' and game.count(s) >= 6:
+            switch[n] = 5
+    probs = [w*(switch[n]+1) for n, w in enumerate(weight)]
+    return probs
 
 def spin_platinum():
     game = []
-    start = 1
-    end = 201
+    r_full = 0
     for i in range(5):
+        probs = getWeightedProbability(game)
         tmp = []
         if game.count('R') >= 9:
-            end = 193
+            r_full = 1
         col_type = getPlatinumColType(i)
         if col_type == '3':
             for i in range(3):
-                tmp.append(getPlatinumSymbol(start, end))
+                tmp.append(getPlatinumSymbol(probs, r_full))
         elif col_type == '2-1':
-            tmp.extend([getPlatinumSymbol(start, end)]*2)
-            tmp.append(getPlatinumSymbol(start, end))
+            tmp.extend([getPlatinumSymbol(probs, r_full)]*2)
+            tmp.append(getPlatinumSymbol(probs, r_full))
         elif col_type == '2-2':
-            tmp.extend([getPlatinumSymbol(start, end)]*2)
-            tmp.append(getPlatinumSymbol(start, end))
+            tmp.extend([getPlatinumSymbol(probs, r_full)]*2)
+            tmp.append(getPlatinumSymbol(probs, r_full))
             tmp[2], tmp[1] = tmp[1], tmp[2]
         elif col_type == '2-3':
-            tmp.append(getPlatinumSymbol(start, end))
-            tmp.extend([getPlatinumSymbol(start, end)]*2)
+            tmp.append(getPlatinumSymbol(probs, r_full))
+            tmp.extend([getPlatinumSymbol(probs, r_full)]*2)
         elif col_type == '1':
-            tmp.append(getPlatinumSymbol(start, end))
-            tmp.extend([getPlatinumSymbol(start, end)]*3)
+            tmp.extend([getPlatinumSymbol(probs, r_full)]*3)
         game.extend(tmp)
     return game
-
-def calPayline():
-    pay = 0
-    for payline in paylines:
-        count = 0
-        for i in range(5):
-            if payline[i] != 'W':
-                sym = game[payline[i]]
-                break
-        for n, i in enumerate(payline):
-            if game[payline[n]] == 'W':
-                count += 1
-                if count == 5:
-                    pay += payTable.loc[count-3,sym]
-                    break
-                continue
-            if game[payline[n]] != game[payline[n+1]]:
-                if n <= 1:
-                    break
-                else:
-                    pay += payTable.loc[count-2,sym]
-                    break
-            if n == 4:
-                pay += payTable.loc[count-2,sym]
-            count += 1
 
 def getSym(lst):
     if len(set(lst)) < 2:
@@ -221,24 +202,26 @@ def richCheck(game, bpl):
         return bpl * 2250
     elif rnum == 8:
         return bpl * 15000
-    elif rnum == 9:
+    elif rnum >= 9:
         return bpl * 30000
 
 def calPlatinumPayline(game, bpl):
     pay = 0
-    r_acc = 0
+    # r_acc += 1
     pay_type_list = []
     
     # RICH 보너스 계산
     pay += richCheck(game, bpl)
-    r_acc += game.count('R')
     
     '''
     # RICH 누적 보너스 계산
     if r_acc >= 100:
         r_acc = 0
-        # pay += bpl *  
+        pay += bpl * np.random.randint(1000, 1201) 
     '''
+    btrigger = np.random.randint(1, 101)
+    if btrigger == 1:
+         pay += bpl * np.random.randint(1100, 1201)
     
     # payline 계산
     for payline in paylines:
@@ -260,18 +243,106 @@ def calPlatinumPayline(game, bpl):
             sym = getSym(tmp)
             pay += payTable.loc[len(tmp)-3, sym] * bpl
         pay_type_list.append(tmp)
-    return pay
+    return pay, pay_type_list
 
 def playPlatinum(n, bpl):
+    r_acc = 0
     pay_list = []
+    pay_type_list = []
     while(n):
         game = spin_platinum()
-        pay_list.append(calPlatinumPayline(game, bpl))
+        pay_list.append(calPlatinumPayline(game, bpl)[0])
+        pay_type_list.append(calPlatinumPayline(game, bpl)[1])
         n -= 1
-    return pay_list
-pay_list = playPlatinum(2000, 2000)
-sum(pay_list) / len(pay_list)
-p_test = []
+    return pay_list, pay_type_list
+
+### ----------- ###
+r_acc = 0
+simul_pay_list, simul_pay_type_list = playPlatinum(2000, 2000)
+
+sampling_pay = []
+for i in range(20):
+    simul_pay_list, simul_pay_type_list = playPlatinum(2000, 2000)
+    sampling_pay.append(sum(simul_pay_list) / len(simul_pay_list))
+    
+sum(sampling_pay) / len(sampling_pay)
+
+print('Simulation Average Reward : ', sum(simul_pay_list) / len(simul_pay_list))
+
+real_pay_list, real_pay_type_list = [], []
+
 for t_game in test_game:
-    p_test.append(calPlatinumPayline(t_game, 2000))
-sum(p_test) / len(p_test)
+    real_pay_list.append(calPlatinumPayline(t_game, 2000)[0])
+    real_pay_type_list.append(calPlatinumPayline(t_game, 2000)[1])
+
+print('Real Average Reward : ', sum(real_pay_list) / len(real_pay_list))
+
+
+### ----- 쓰레기통 ------ ###
+
+'''
+def getPlatinumColType():
+    i = np.random.randint(1, 201)
+    if i <= 109:
+        return 3
+    elif i <= 186 and i > 109:
+        return 2
+    elif i > 186:
+        return 1
+'''
+
+
+'''
+def getPlatinumSymbol(start, end):
+    i = np.random.randint(start, end)
+    if i <= 27:
+        return 'Q'
+    elif i <= 52 and i > 27:
+        return '10'
+    elif i <= 76 and i > 52:
+        return 'K'
+    elif i <= 99 and i > 76:
+        return 'A'
+    elif i <= 118 and i > 99:
+        return 'J'
+    elif i <= 137 and i > 118:
+        return 'Ca'
+    elif i <= 155 and i > 137:
+        return 'Cr'
+    elif i <= 171 and i > 155:
+        return 'D'
+    elif i <= 186 and i > 171:
+        return 'Co'
+    elif i <= 192 and i > 186:
+        return 'W'
+    elif i > 192:
+        return 'R'
+'''
+
+
+'''
+def calPayline():
+    pay = 0
+    for payline in paylines:
+        count = 0
+        for i in range(5):
+            if payline[i] != 'W':
+                sym = game[payline[i]]
+                break
+        for n, i in enumerate(payline):
+            if game[payline[n]] == 'W':
+                count += 1
+                if count == 5:
+                    pay += payTable.loc[count-3,sym]
+                    break
+                continue
+            if game[payline[n]] != game[payline[n+1]]:
+                if n <= 1:
+                    break
+                else:
+                    pay += payTable.loc[count-2,sym]
+                    break
+            if n == 4:
+                pay += payTable.loc[count-2,sym]
+            count += 1
+'''
