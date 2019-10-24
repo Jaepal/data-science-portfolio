@@ -6,8 +6,7 @@ class game_platinum:
     platinum 슬롯 구현
     """
     
-    def __init__(self, n, bpl):
-        self.n = n
+    def __init__(self, bpl):
         self.bpl = bpl
         self.paylines = [[1, 4, 7, 10, 13],
                          [0, 3, 6, 9, 12],
@@ -120,7 +119,6 @@ class game_platinum:
     def cal_platinum_payline(self, game, bpl):
         pay = 0
         # r_acc += 1
-        pay_type_list = []
         
         # RICH 보너스 계산
         pay += self.check_rich(game, bpl)
@@ -154,33 +152,22 @@ class game_platinum:
             else:
                 sym = self.get_symbol(tmp)
                 pay += self.payTable.loc[len(tmp)-3, sym] * bpl
-            pay_type_list.append(tmp)
-        return pay, pay_type_list
+        return pay
 
-    def play_platinum(self, n, bpl):
-        pay_list = []
-        pay_type_list = []
-        while(n):
-            game = self.spin_platinum()
-            pay_list.append(self.cal_platinum_payline(game, bpl)[0])
-            pay_type_list.append(self.cal_platinum_payline(game, bpl)[1])
-            n -= 1
-        return pay_list, pay_type_list
+    def play_platinum(self):
+        
+        game = self.spin_platinum()
+        pay = self.cal_platinum_payline(game, self.bpl)
+        return pay
 
-game_platinum(1, 2000).spin_platinum()
+game_platinum(2000).play_platinum()
 
-platinum = game_platinum(10, 2000)
-pay_list, play_type_list = platinum.play_platinum(10, 2000)
-np.average(pay_list)
-
-ms_labels = ['10', 'J', 'Q', 'K', 'A', 'GGM', 'OM', 'RM', 'GWM', 'W', 'S']
 class game_monster:
     """
     monster 슬롯 구현
     """
     
-    def __init__(self, n, bpl):
-        self.n = n
+    def __init__(self, bpl):
         self.bpl = bpl
         self.paylines = [[1, 4, 7, 10, 13],
                          [0, 3, 6, 9, 12],
@@ -256,7 +243,7 @@ class game_monster:
         weight = [26, 24, 28, 28, 25, 19, 15, 13, 9, 3]
         switch = [0] * 11
         unique_list = list(set(game))
-        for n, s in enumerate(ms_labels[:10]):
+        for n, s in enumerate(self.ms_labels[:10]):
             if s in unique_list:
                 switch[n] = 2
             if game.count(s) >= 6:
@@ -287,8 +274,6 @@ class game_monster:
                     continue
     def cal_monster_payline(self, game, bpl):
         pay = 0
-        # r_acc += 1
-        pay_type_list = []
         for payline in self.paylines:
             tmp = []
             for i in range(5):
@@ -307,22 +292,14 @@ class game_monster:
             else:
                 sym = self.get_symbol(tmp)
                 pay += self.ms_paytable.loc[len(tmp)-3, sym] * bpl
-            pay_type_list.append(tmp)
-        return pay, pay_type_list
+        return pay
+
+    def play_monster(self):
+        
+        game = self.spin_monster()
+        pay = self.cal_monster_payline(game, self.bpl)
+        return pay
     
 
-game_monster(10, 2000).cal_monster_payline(test_game[2], 2000)
-
-pl_paytable = pd.read_csv('../data/slot_machine/monster_csv/ms_paytable.csv')
-ms_all = pd.read_csv('../data/slot_machine/monster_csv/ms_all.csv')
-test_game = []
-ttmp = []
-
-for n, x in enumerate(ms_all['classname']):
-    ttmp.append(x)
-    if (n+1) % 15 == 0:
-        test_game.append(ttmp)
-        ttmp = []
-
-game_monster(10, 2000).cal_monster_payline(test_game[15], 2000)
+game_monster(2000).play_monster()
 
