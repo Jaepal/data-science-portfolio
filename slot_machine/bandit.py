@@ -1,41 +1,117 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
+import slot
 
-class eps_bandit:
-    '''
-    epsilon-greedy 알고리즘
+slots = ['Platinum', 'Monster']
+N_experiments = 100
+N_episodes = 10000
+epsilon = 0.1
+
+asd = np.array([0, 10, 10])
+np.random.choice(np.flatnonzero(asd == asd.max()))
+np.random.random(2)
+
+class Bandit:
     
-    Inputs
-    =================
-    k : number of arms(int)
-    eps: probability of random action 0 < eps < 1 (float)
-    iters: number of steps (int)
-    '''
-    def __init__(self, k, eps, iters):
-        # Number of arms
-        self.k = k
-        # Search probability
-        self.eps = eps
-        # Step count
-        self.iters = iters
-        # Step count for each arm
-        self.k_n = np.zeros(k)
-        # Total mean reward
-        self.mean_reward = 0
-        self.reward = np.zeros(iters)
-        # Mean reward for each arm
-        self.k_reward = np.zeros(k)
+    def __init__(self, bpl, slots):
+        self.N = len(slots) # bandit(slot machine)의 숫자
+        self.bpl = bpl
+        self.slot_platinum = slot.game_platinum(bpl)
+        self.slot_monster = slot.game_monster(bpl)
     
-    def pull(self):
-        p = np.random.rand()
-        if self.eps == 0 and self.n == 0:
-            a = np.random.choice(self.k)
-        elif p < self.eps:
-            # Randomly select an action
-            a = np.random.choice(self.k)
+    def spin_slot(self, i):
+        if i == 0:
+            return self.slot_platinum.play_platinum()
+        elif i == 1:
+            return self.slot_monster.play_monster()
+
+class EpsilonGreedy:
+    
+    def __init__(self, bandit, epsilon):
+        self.epsilon = epsilon
+        self.k = np.zeros(bandit.N, dtype=np.int)
+        self.Q = np.zeros(bandit.N, dtype=np.float)
+    
+    def get_action(self, bandit):
+        rand = np.random.random()
+        if rand < self.epsilon:
+            action_explore = np.random.randint(bandit.N)
+            return action_explore
         else:
-            # Take greedy action
-            a = np.argmax(self.k_reward)
+            action_greedy = np.random.choice(np.flatnonzero(self.Q == self.Q.max()))
+            return action_greedy
         
-        reward = np.random.normal(self.mu[a], 1)
+    def update_Q(self, action, reward):
+        self.k[action] += 1
+        self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
+
+def experiment(agent, bandit, N_episodes):
+    action_history = []
+    reward_history = []
+    for episode in range(N_episodes):
+        action = agent.get_action(bandit)
+        reward = bandit.spin_slot(action)
+        agent.update_Q(action, reward)
+        action_history.append(action)
+        reward_history.append(reward)
+    return action_history, reward_history
+
+N_bandits = len(slots)
+print("Running multi-armed bandits with N_bandits = {} and agent epsilon = {}".format(N_bandits, epsilon))
+reward_history_avg = np.zeros(N_episodes)  # reward history experiment-averaged
+action_history_sum = np.zeros((N_episodes, N_bandits))  # sum action history
+
+for i in range(N_experiments):
+    bandit = Bandit(2000, slots)
+    agent = EpsilonGreedy(bandit, epsilon)
+    (action_history, reward_history) = experiment(agent, bandit, N_episodes)
+
+    if (i + 1)% (N_experiments / 100) == 0:
+        print("[Experiment {}/{}]".format(i + 1, N_experiments))
+        print("  N_episodes = {}".format(N_episodes))
+        print("  bandit choice history = {}".format(len(action_history)))
+        print("  reward history = {}".format(len(reward_history)))
+        print("  average reward = {}".format(np.sum(reward_history) / len(reward_history)))
+        print("")
+    # Sum up experiment reward (later to be divided to represent an average)
+    reward_history_avg += reward_history
+    # Sum up action history
+    for j, (a) in enumerate(action_history):
+        action_history_sum[j][a] += 1
+
+reward_history_avg /= np.float(N_experiments)
+print("reward history avg = {}".format(reward_history_avg))
+
+
+
+plt.plot(reward_history_avg)
+plt.xlabel("Episode number")
+plt.ylabel("Rewards collected".format(N_experiments))
+plt.title("Bandit reward history averaged over {} experiments (epsilon = {})".format(N_experiments, epsilon))
+ax = plt.gca()
+ax.set_xscale("log", nonposx='clip')
+plt.xlim([1, N_episodes])
+plt.show()
+
+
+
+plt.figure(figsize=(18, 12))
+for i in range(N_bandits):
+    action_history_sum_plot = 100 * action_history_sum[:,i] / N_experiments
+    plt.plot(list(np.array(range(len(action_history_sum_plot)))+1),
+             action_history_sum_plot,
+             linewidth=5.0,
+             label="Bandit #{}".format(i+1))
+plt.title("Bandit action history averaged over {} experiments (epsilon = {})".format(N_experiments, epsilon), fontsize=26)
+plt.xlabel("Episode Number", fontsize=26)
+plt.ylabel("Bandit Action Choices (%)", fontsize=26)
+leg = plt.legend(loc='upper left', shadow=True, fontsize=26)
+ax = plt.gca()
+ax.set_xscale("log", nonposx='clip')
+plt.xlim([1, N_episodes])
+plt.ylim([0, 100])
+plt.xticks(fontsize=24)
+plt.yticks(fontsize=24)
+for legobj in leg.legendHandles:
+    legobj.set_linewidth(16.0)
+plt.show()
