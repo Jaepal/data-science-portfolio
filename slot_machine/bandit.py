@@ -7,9 +7,6 @@ N_experiments = 100
 N_episodes = 10000
 epsilon = 0.1
 
-asd = np.array([0, 10, 10])
-np.random.choice(np.flatnonzero(asd == asd.max()))
-np.random.random(2)
 
 class Bandit:
     
@@ -45,6 +42,27 @@ class EpsilonGreedy:
         self.k[action] += 1
         self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
 
+class UCB:
+    
+    def __init__(self, bandit):
+        self.k = np.zeros(bandit.N, dtype=np.int)
+        self.Q = np.zeros(bandit.N, dtype=np.float)
+
+    def get_action(self, bandit):
+        for arm in range(bandit.N):
+          if self.k[arm] == 0:
+            return arm
+        
+        ucb_values = [0.0 for arm in range(bandit.N)]
+        total_counts = sum(self.k)
+        for arm in range(bandit.N):
+            ucb_values[arm]= self.Q[arm] / self.k[arm] + (2 * np.log(total_counts) / self.k[arm]) ** 0.5
+        return np.argmax(ucb_values)
+    
+    def update_Q(self, action, reward):
+        self.k[action] += 1
+        self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
+
 def experiment(agent, bandit, N_episodes):
     action_history = []
     reward_history = []
@@ -63,16 +81,17 @@ action_history_sum = np.zeros((N_episodes, N_bandits))  # sum action history
 
 for i in range(N_experiments):
     bandit = Bandit(2000, slots)
-    agent = EpsilonGreedy(bandit, epsilon)
+    #agent = EpsilonGreedy(bandit, epsilon)
+    agent = UCB(bandit)
     (action_history, reward_history) = experiment(agent, bandit, N_episodes)
 
-    if (i + 1)% (N_experiments / 100) == 0:
-        print("[Experiment {}/{}]".format(i + 1, N_experiments))
-        print("  N_episodes = {}".format(N_episodes))
-        print("  bandit choice history = {}".format(len(action_history)))
-        print("  reward history = {}".format(len(reward_history)))
-        print("  average reward = {}".format(np.sum(reward_history) / len(reward_history)))
-        print("")
+    #if (i + 1)% (N_experiments / 100) == 0:
+    print("[Experiment {}/{}]".format(i + 1, N_experiments))
+    print("  N_episodes = {}".format(N_episodes))
+    print("  bandit choice history = {}".format(len(action_history)))
+    print("  reward history = {}".format(len(reward_history)))
+    print("  average reward = {}".format(np.sum(reward_history) / len(reward_history)))
+    print("")
     # Sum up experiment reward (later to be divided to represent an average)
     reward_history_avg += reward_history
     # Sum up action history
