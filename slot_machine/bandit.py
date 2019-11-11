@@ -63,6 +63,16 @@ class UCB:
         self.k[action] += 1
         self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
 
+class TS:
+    
+    def __init__(self, bandit):
+        self.k = np.zeros(bandit.N, dtype=np.int)
+        self.Q = np.zeros(bandit.N, dtype=np.float)
+        self.theta = np.zeros(bandit.N, dtype=np.int)
+    
+    def get_action(self, bandit):
+    
+
 def experiment(agent, bandit, N_episodes):
     action_history = []
     reward_history = []
