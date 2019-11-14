@@ -69,9 +69,13 @@ class TS:
         self.k = np.zeros(bandit.N, dtype=np.int)
         self.Q = np.zeros(bandit.N, dtype=np.float)
         self.theta = np.zeros(bandit.N, dtype=np.int)
+        self.S = 100000000
     
     def get_action(self, bandit):
-    
+        samples_list = []
+        
+        success_count = self.Q.sum(axis=1) / self.S
+        failure_count = 
 
 def experiment(agent, bandit, N_episodes):
     action_history = []
