@@ -1,12 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import stats
 import slot
 
 slots = ['Platinum', 'Monster']
 N_experiments = 100
 N_episodes = 10000
 epsilon = 0.1
-
+rtp_values = [0.583, 0.416]
 
 class Bandit:
     
@@ -69,24 +70,43 @@ class TS:
         self.k = np.zeros(bandit.N, dtype=np.int)
         self.Q = np.zeros(bandit.N, dtype=np.float)
         self.theta = np.zeros(bandit.N, dtype=np.int)
+        self.alpha = 1
+        self.beta = 1
+        self.prior_distributions = [stats.beta(a=self.alpha, b=self.beta) for _ in range(bandit.N)]
         self.S = 100000000
     
     def get_action(self, bandit):
-        samples_list = []
-        
-        success_count = self.Q.sum(axis=1) / self.S
-        failure_count = 
+        theta_samples = [float(dist.rvs(1)) for dist in self.prior_distributions]
+        return np.argmax(theta_samples)
+    
+    def update_Q(self, action, reward):
+        self.k[action] += 1
+        self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
+        self.alpha += 1 - reward / 100000000
+        self.beta += reward / 100000000
+        self.prior_distributions = stats.beta(a=self.alpha, b=self.beta)
+
+def cal_regret(rtp_values, choices):
+    w_opt = rtp_values.max()
+    return (w_opt - rtp_values[choices.astype(int)]).cumsum()
 
 def experiment(agent, bandit, N_episodes):
     action_history = []
     reward_history = []
+    regret_history = []
     for episode in range(N_episodes):
         action = agent.get_action(bandit)
         reward = bandit.spin_slot(action)
+        regret = cal_regret(rtp_values, action)
         agent.update_Q(action, reward)
         action_history.append(action)
         reward_history.append(reward)
-    return action_history, reward_history
+        regret_history.append(regret)
+        
+    return action_history, reward_history, regret_history
+
+
+
 
 N_bandits = len(slots)
 print("Running multi-armed bandits with N_bandits = {} and agent epsilon = {}".format(N_bandits, epsilon))
@@ -96,8 +116,8 @@ action_history_sum = np.zeros((N_episodes, N_bandits))  # sum action history
 for i in range(N_experiments):
     bandit = Bandit(2000, slots)
     #agent = EpsilonGreedy(bandit, epsilon)
-    agent = UCB(bandit)
-    (action_history, reward_history) = experiment(agent, bandit, N_episodes)
+    agent = TS(bandit)
+    (action_history, reward_history, regert_history) = experiment(agent, bandit, N_episodes)
 
     #if (i + 1)% (N_experiments / 100) == 0:
     print("[Experiment {}/{}]".format(i + 1, N_experiments))
@@ -116,7 +136,7 @@ reward_history_avg /= np.float(N_experiments)
 print("reward history avg = {}".format(reward_history_avg))
 
 
-
+"""
 plt.plot(reward_history_avg)
 plt.xlabel("Episode number")
 plt.ylabel("Rewards collected".format(N_experiments))
@@ -125,7 +145,7 @@ ax = plt.gca()
 ax.set_xscale("log", nonposx='clip')
 plt.xlim([1, N_episodes])
 plt.show()
-
+"""
 
 
 plt.figure(figsize=(18, 12))
