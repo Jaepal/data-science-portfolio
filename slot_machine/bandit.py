@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import stats
+import scipy.stats as stats
 import slot
 
 slots = ['Platinum', 'Monster']
 N_experiments = 100
 N_episodes = 10000
 epsilon = 0.1
-rtp_values = [0.583, 0.416]
+rtp_values = np.array([0.583, 0.416])
 
 class Bandit:
     
