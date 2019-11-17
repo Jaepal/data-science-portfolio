@@ -70,9 +70,9 @@ class TS:
         self.k = np.zeros(bandit.N, dtype=np.int)
         self.Q = np.zeros(bandit.N, dtype=np.float)
         self.theta = np.zeros(bandit.N, dtype=np.int)
-        self.alpha = 1
-        self.beta = 1
-        self.prior_distributions = [stats.beta(a=self.alpha, b=self.beta) for _ in range(bandit.N)]
+        self.alpha = np.ones(bandit.N, dtype=np.float)
+        self.beta = np.ones(bandit.N, dtype=np.float)
+        self.prior_distributions = [stats.beta(a=self.alpha[i], b=self.beta[i]) for i in range(bandit.N)]
         self.S = 100000000
     
     def get_action(self, bandit):
@@ -80,11 +80,16 @@ class TS:
         return np.argmax(theta_samples)
     
     def update_Q(self, action, reward):
+        while(reward >= 60000):
+            self.k[action] += 1
+            self.Q[action] += (1./self.k[action]) * (60000 - self.Q[action])
+            self.beta[action] += 1
+            reward -= 60000
         self.k[action] += 1
         self.Q[action] += (1./self.k[action]) * (reward - self.Q[action])
-        self.alpha += 1 - reward / 100000000
-        self.beta += reward / 100000000
-        self.prior_distributions = stats.beta(a=self.alpha, b=self.beta)
+        self.alpha[action] += 1 - reward / 60000
+        self.beta[action] += reward / 60000
+        self.prior_distributions[action] = stats.beta(a=self.alpha[action], b=self.beta[action])
 
 def cal_regret(rtp_values, choices):
     w_opt = rtp_values.max()
@@ -106,24 +111,24 @@ def experiment(agent, bandit, N_episodes):
     return action_history, reward_history, regret_history
 
 
-
-
 N_bandits = len(slots)
 print("Running multi-armed bandits with N_bandits = {} and agent epsilon = {}".format(N_bandits, epsilon))
 reward_history_avg = np.zeros(N_episodes)  # reward history experiment-averaged
 action_history_sum = np.zeros((N_episodes, N_bandits))  # sum action history
 
 for i in range(N_experiments):
+    print('Exp', i)
+    """
     bandit = Bandit(2000, slots)
     #agent = EpsilonGreedy(bandit, epsilon)
     agent = TS(bandit)
+    """
+    bandit = Bandit(2000, slots)
+    agent = TS(bandit)
     (action_history, reward_history, regert_history) = experiment(agent, bandit, N_episodes)
-
+    
     #if (i + 1)% (N_experiments / 100) == 0:
-    print("[Experiment {}/{}]".format(i + 1, N_experiments))
-    print("  N_episodes = {}".format(N_episodes))
-    print("  bandit choice history = {}".format(len(action_history)))
-    print("  reward history = {}".format(len(reward_history)))
+    print("[Experiment {}/{}], N_episodes = {}".format(i + 1, N_experiments, N_episodes))
     print("  average reward = {}".format(np.sum(reward_history) / len(reward_history)))
     print("")
     # Sum up experiment reward (later to be divided to represent an average)
@@ -146,8 +151,8 @@ ax.set_xscale("log", nonposx='clip')
 plt.xlim([1, N_episodes])
 plt.show()
 """
-
-
+agent.alpha
+agent.beta
 plt.figure(figsize=(18, 12))
 for i in range(N_bandits):
     action_history_sum_plot = 100 * action_history_sum[:,i] / N_experiments
