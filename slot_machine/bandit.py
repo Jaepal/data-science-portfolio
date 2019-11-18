@@ -173,3 +173,8 @@ plt.yticks(fontsize=24)
 for legobj in leg.legendHandles:
     legobj.set_linewidth(16.0)
 plt.show()
+
+agent.alpha
+agent.beta
+
+regert_history
