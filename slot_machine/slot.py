@@ -123,16 +123,6 @@ class game_platinum:
         # RICH 보너스 계산
         pay += self.check_rich(game, bpl)
         
-        """
-        # RICH 누적 보너스 계산
-        if r_acc >= 100:
-            r_acc = 0
-            pay += bpl * np.random.randint(1000, 1201) 
-        
-        btrigger = np.random.randint(1, 101)
-        if btrigger == 1:
-             pay += bpl * np.random.randint(1100, 1201)
-        """
         # payline 계산
         for payline in self.paylines:
             tmp = []
@@ -143,8 +133,11 @@ class game_platinum:
                 if i == 0 and game[payline[i]] == 'W':
                     tmp.append(game[payline[i]])
                 elif game[payline[i]] != game[payline[i+1]] and game[payline[i+1]] != 'W':
-                    tmp.append(game[payline[i]])
-                    break
+                    if game[payline[i+1]] in tmp:
+                        tmp.append(game[payline[i]])
+                    else:
+                        tmp.append(game[payline[i]])
+                        break
                 else:
                     tmp.append(game[payline[i]])
             if len(tmp) <= 2:
@@ -283,8 +276,11 @@ class game_monster:
                 if i == 0 and game[payline[i]] == 'W':
                     tmp.append(game[payline[i]])
                 elif game[payline[i]] != game[payline[i+1]] and game[payline[i+1]] != 'W':
-                    tmp.append(game[payline[i]])
-                    break
+                    if game[payline[i+1]] in tmp:
+                        tmp.append(game[payline[i]])
+                    else:
+                        tmp.append(game[payline[i]])
+                        break
                 else:
                     tmp.append(game[payline[i]])
             if len(tmp) <= 2:
@@ -308,8 +304,7 @@ class game_masque:
     monster 슬롯 구현
     """
     
-    def __init__(self, n, bpl):
-        self.n = n
+    def __init__(self, bpl):
         self.bpl = bpl
         self.paylines = [[0, 3, 6, 9, 12],
                          [1, 4, 7, 10, 13],
@@ -425,19 +420,22 @@ class game_masque:
                 if i == 0 and game[payline[i]] == 'W':
                     tmp.append(game[payline[i]])
                 elif game[payline[i]] != game[payline[i+1]] and game[payline[i+1]] != 'W':
-                    tmp.append(game[payline[i]])
-                    break
+                    if game[payline[i+1]] in tmp:
+                        tmp.append(game[payline[i]])
+                    else:
+                        tmp.append(game[payline[i]])
+                        break
                 else:
                     tmp.append(game[payline[i]])
             if len(tmp) <= 2:
                 tmp = []
             else:
                 sym = self.get_symbol(tmp)
-                pay += self.ms_paytable.loc[len(tmp)-3, sym] * bpl
+                pay += self.mq_paytable.loc[len(tmp)-3, sym] * bpl
         return pay
 
     def play_masque(self):
         
         game = self.spin_masque()
-        pay = self.cal_monster_payline(game, self.bpl)
+        pay = self.cal_masque_payline(game, self.bpl)
         return pay
