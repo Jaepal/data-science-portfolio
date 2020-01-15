@@ -39,9 +39,9 @@ class game_platinum:
                          [2, 4, 6, 9, 12],
                          [1, 3, 7, 9, 13]]
         self.rich_reward_list = [0, 0, 0, 30, 90, 240, 900, 2250, 15000, 30000]
-        self.labels = ['Q', '10', 'K', 'A', 'J', 'Ca', 'Cr', 'D', 'Co', 'W', 'R']
+        self.pl_labels = ['Q', '10', 'K', 'A', 'J', 'Ca', 'Cr', 'D', 'Co', 'W', 'R']
         self.col_types = ['3', '2-1', '2-2', '2-3', '1']
-        self.payTable = pd.read_csv('../data/slot_machine/platinum_csv/pl_paytable.csv')
+        self.pl_paytable = pd.read_csv('../data/slot_machine/platinum_csv/pl_paytable.csv')
         self.pl_all = pd.read_csv('../data/slot_machine/platinum_csv/pl_all.csv')
 
     def get_platinum_coltype(self, i):
@@ -58,10 +58,10 @@ class game_platinum:
 
     def get_platinum_symbol(self, col_type, probs, r_full=0):
         if r_full:
-            n_labels = self.labels[:10]
+            n_labels = self.pl_labels[:10]
             n_probs = [i / sum(probs[:10]) for i in probs[:10]]
         else:
-            n_labels = self.labels
+            n_labels = self.pl_labels
             n_probs = [i / sum(probs) for i in probs]
         if col_type == '3':
             reel = np.random.choice(n_labels, 3, replace=False, p=n_probs).tolist()
@@ -80,16 +80,38 @@ class game_platinum:
         return reel
 
     def get_weighted_probability(self, game):
-        weight = [27, 25, 24, 23, 19, 19, 18, 16, 15, 8, 6]
-        switch = [0] * 11
-        unique_list = list(set(game))
-        for n, s in enumerate(self.labels):
-            if s in unique_list:
-                switch[n] = 2
-            if s != 'R' and game.count(s) >= 6:
-                switch[n] = 5
-        probs = [w*(switch[n]+1) for n, w in enumerate(weight)]
-        return probs
+        weight = [25, 19, 27, 24, 23, 19, 15, 16, 18, 6, 8]
+        switch = [1] * 11
+        game_copy = game.copy()
+        reel_list = []
+        tmp = []
+        count = [0] * 11
+        itr = 0
+        while(len(game_copy) >= 3):
+            for i in range(3):
+                tmp.append(game_copy.pop(0))
+            reel_list.append(tmp)
+            for n, s in enumerate(self.pl_labels):
+                
+                if s in reel_list[itr]:
+                    count[n] += 1
+                
+                if s in tmp and s != 'R':
+                    switch[n] *= 1.4
+                
+            tmp = []
+            itr += 1
+        for i in range(len(count)-1):
+            if count[i] == 2:
+                switch[i] *= 4.5
+            elif count[i] == 3:
+                switch[i] *= 3.5
+            elif count[i] == 4:
+                switch[i] *= 5
+            else:
+                continue
+        probs = [w*(switch[n]) for n, w in enumerate(weight)]
+        return probs    
     
     def spin_platinum(self):
         game = []
@@ -102,7 +124,7 @@ class game_platinum:
             game.extend(self.get_platinum_symbol(col_type, probs, r_full))
         return game
 
-    def get_symbol(self, lst):
+    def get_platinum_payline_symbol(self, lst):
         if len(set(lst)) < 2:
             return lst[0]
         else:
@@ -112,16 +134,16 @@ class game_platinum:
                 else:
                     continue
 
-    def check_rich(self, game, bpl):
+    def check_rich(self, game):
         rnum = game.count('R')
-        return bpl * self.rich_reward_list[rnum]
+        return self.bpl * self.rich_reward_list[rnum]
 
-    def cal_platinum_payline(self, game, bpl):
+    def cal_platinum_payline(self, game):
         pay = 0
-        # r_acc += 1
+        pay_type_list = []
         
         # RICH 보너스 계산
-        pay += self.check_rich(game, bpl)
+        pay += self.check_rich(game)
         
         # payline 계산
         for payline in self.paylines:
@@ -140,20 +162,18 @@ class game_platinum:
                         break
                 else:
                     tmp.append(game[payline[i]])
-            if len(tmp) <= 2:
-                tmp = []
-            else:
-                sym = self.get_symbol(tmp)
-                pay += self.payTable.loc[len(tmp)-3, sym] * bpl
-        return pay
+            if len(tmp) >= 3:
+                sym = self.get_platinum_payline_symbol(tmp)
+                pay += self.pl_paytable.loc[len(tmp)-3, sym] * self.bpl
+                pay_type_list.append(tmp)
+        return pay, pay_type_list
 
-    def play_platinum(self):
+
+    def play(self):
         
         game = self.spin_platinum()
-        pay = self.cal_platinum_payline(game, self.bpl)
+        pay = self.cal_platinum_payline(game)[0]
         return pay
-
-game_platinum(2000).play_platinum()
 
 class game_monster:
     """
@@ -234,20 +254,43 @@ class game_monster:
     
     def get_monster_weighted_probability(self, game):
         weight = [26, 24, 28, 28, 25, 19, 15, 13, 9, 3]
-        switch = [0] * 10
-        unique_list = list(set(game))
-        for n, s in enumerate(self.ms_labels[:10]):
-            if s in unique_list:
-                switch[n] = 2
-            if game.count(s) >= 6:
-                switch[n] = 4
-        probs = [w*(switch[n]+1) for n, w in enumerate(weight)]
-        return probs
+        switch = [1] * 10
+        game_copy = game.copy()
+        reel_list = []
+        tmp = []
+        count = [0] * 11
+        itr = 0
+        while(len(game_copy) >= 3):
+            for i in range(3):
+                tmp.append(game_copy.pop(0))
+            reel_list.append(tmp)
+            for n, s in enumerate(self.ms_labels):
+                
+                if s in reel_list[itr]:
+                    count[n] += 1
+                
+                if s in tmp and s != 'S':
+                    switch[n] *= 1.35
+                
+            tmp = []
+            itr += 1
+        for i in range(len(count)-1):
+            if count[i] == 2:
+                switch[i] *= 4
+            elif count[i] == 3:
+                switch[i] *= 3
+            elif count[i] == 4:
+                switch[i] *= 4.5
+            else:
+                continue
+        probs = [w*(switch[n]) for n, w in enumerate(weight)]
+        return probs 
     
     def spin_monster(self):
         game = []
         scatter_num = self.get_monster_scatter()
         scatter_position = np.random.choice([0, 2, 4], scatter_num, replace=False, p=[0.434, 0.313, 0.253]).tolist()
+        
         for i in range(5):
             probs = self.get_monster_weighted_probability(game)
             col_type = self.get_monster_coltypes(i)
@@ -256,7 +299,8 @@ class game_monster:
             game[np.random.randint(sp*3, sp*3+3)] = 'S'
     
         return game
-    def get_symbol(self, lst):
+    
+    def get_monster_playine_symbol(self, lst):
         if len(set(lst)) < 2:
             return lst[0]
         else:
@@ -265,8 +309,10 @@ class game_monster:
                     return x
                 else:
                     continue
-    def cal_monster_payline(self, game, bpl):
+        
+    def cal_monster_payline(self, game):
         pay = 0
+        pay_type_list = []
         for payline in self.paylines:
             tmp = []
             for i in range(5):
@@ -283,21 +329,18 @@ class game_monster:
                         break
                 else:
                     tmp.append(game[payline[i]])
-            if len(tmp) <= 2:
-                tmp = []
-            else:
-                sym = self.get_symbol(tmp)
-                pay += self.ms_paytable.loc[len(tmp)-3, sym] * bpl
-        return pay
+            if len(tmp) >= 3:
+                sym = self.get_monster_playine_symbol(tmp)
+                pay += self.ms_paytable.loc[len(tmp)-3, sym] * self.bpl
+                pay_type_list.append(tmp)
+        return pay, pay_type_list
 
-    def play_monster(self):
+    def play(self):
         
         game = self.spin_monster()
-        pay = self.cal_monster_payline(game, self.bpl)
+        pay = self.cal_monster_payline(game)[0]
         return pay
-    
 
-game_monster(2000).play_monster()
 
 class game_masque:
     """
@@ -305,7 +348,7 @@ class game_masque:
     """
     
     def __init__(self, bpl):
-        self.bpl = bpl
+        self.bpl = bpl // 3
         self.paylines = [[0, 3, 6, 9, 12],
                          [1, 4, 7, 10, 13],
                          [2, 5, 8, 11, 14],
@@ -357,7 +400,7 @@ class game_masque:
         return np.random.choice([0, 1, 2, 3, 4, 5], 1, p=[0.5483, 0.3295, 0.103, 0.017, 0.002, 0.0002]).tolist()[0]
     
     def get_masque_symbol(self, col_type, probs):
-        n_labels = self.ms_labels[:11]
+        n_labels = self.mq_labels[:11]
         n_probs = [i / sum(probs) for i in probs]
 
         if col_type == '3':
@@ -378,15 +421,37 @@ class game_masque:
     
     def get_masque_weighted_probability(self, game):
         weight = [27, 24, 26, 24, 21, 18, 17, 15, 8, 9, 3]
-        switch = [0] * 11
-        unique_list = list(set(game))
-        for n, s in enumerate(self.ms_labels[:10]):
-            if s in unique_list:
-                switch[n] = 2
-            if game.count(s) >= 6:
-                switch[n] = 4
-        probs = [w*(switch[n]+1) for n, w in enumerate(weight)]
-        return probs
+        switch = [1] * 11
+        game_copy = game.copy()
+        reel_list = []
+        tmp = []
+        count = [0] * 11
+        itr = 0
+        while(len(game_copy) >= 3):
+            for i in range(3):
+                tmp.append(game_copy.pop(0))
+            reel_list.append(tmp)
+            for n, s in enumerate(self.mq_labels):
+                
+                if s in reel_list[itr]:
+                    count[n] += 1
+                
+                if s in tmp and s != 'S':
+                    switch[n] *= 1.3
+                
+            tmp = []
+            itr += 1
+        for i in range(len(count)-1):
+            if count[i] == 2:
+                switch[i] *= 4
+            elif count[i] == 3:
+                switch[i] *= 3
+            elif count[i] == 4:
+                switch[i] *= 4.5
+            else:
+                continue
+        probs = [w*(switch[n]) for n, w in enumerate(weight)]
+        return probs 
     
     def spin_masque(self):
         game = []
@@ -397,7 +462,9 @@ class game_masque:
             col_type = self.get_masque_coltypes(i)
             game.extend(self.get_masque_symbol(col_type, probs))
         for sp in scatter_position:
-            game[np.random.randint(sp*3, sp*3+3)] = 'S'
+            game[np.random.randint(sp*3, sp*3+3)] = 'Sc'
+        
+        return game
 
     def get_symbol(self, lst):
         if len(set(lst)) < 2:
@@ -409,8 +476,10 @@ class game_masque:
                 else:
                     continue
     
-    def cal_masque_payline(self, game, bpl):
+    def cal_masque_payline(self, game):
         pay = 0
+        pay_type_list = []
+        
         for payline in self.paylines:
             tmp = []
             for i in range(5):
@@ -427,15 +496,14 @@ class game_masque:
                         break
                 else:
                     tmp.append(game[payline[i]])
-            if len(tmp) <= 2:
-                tmp = []
-            else:
+            if len(tmp) >= 3:
                 sym = self.get_symbol(tmp)
-                pay += self.mq_paytable.loc[len(tmp)-3, sym] * bpl
-        return pay
-
-    def play_masque(self):
+                pay += self.mq_paytable.loc[len(tmp)-3, sym] * self.bpl
+                pay_type_list.append(tmp)
+        return pay, pay_type_list
+    
+    def play(self):
         
         game = self.spin_masque()
-        pay = self.cal_masque_payline(game, self.bpl)
+        pay = self.cal_masque_payline(game)[0]
         return pay
