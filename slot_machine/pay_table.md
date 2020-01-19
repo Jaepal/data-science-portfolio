@@ -8,14 +8,6 @@
 
 
 
-c0 = 10	C4 = A        C8 = Cr
-
-c1 = J	   C5 = Ca
-
-c2 = Q	 C6 = Co
-
-c3 = K	  C7 = D
-
 - Monster
 
 | bpl=2000 | 10    | J     | Q     | K     | A     | GGM   | OM    | RM    | GWM    | W      |
